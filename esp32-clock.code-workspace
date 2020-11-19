@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"idf.espIdfPath": "/home/zyf/src/esp-idf",
+		"idf.toolsPath": "/home/zyf/.espressif",
+		"idf.customExtraPaths": "/home/zyf/.espressif/python_env/idfx.x_py3.8_env/bin:/usr/bin:/home/zyf/.espressif/tools/xtensa-esp32-elf/esp-2020r3-8.4.0/xtensa-esp32-elf/bin:/home/zyf/.espressif/tools/xtensa-esp32s2-elf/esp-2020r3-8.4.0/xtensa-esp32s2-elf/bin:/home/zyf/.espressif/tools/xtensa-esp32s3-elf/esp-2020r3-8.4.0/xtensa-esp32s3-elf/bin:/home/zyf/.espressif/tools/esp32ulp-elf/2.28.51-esp-20191205/esp32ulp-elf-binutils/bin:/home/zyf/.espressif/tools/esp32s2ulp-elf/2.28.51-esp-20191205/esp32s2ulp-elf-binutils/bin:/home/zyf/.espressif/tools/openocd-esp32/v0.10.0-esp32-20200709/openocd-esp32/bin",
+		"idf.customExtraVars": "{\"OPENOCD_SCRIPTS\":\"/home/zyf/.espressif/tools/openocd-esp32/v0.10.0-esp32-20200709/openocd-esp32/share/openocd/scripts\"}",
+		"idf.pythonBinPath": "/home/zyf/.espressif/python_env/idfx.x_py3.8_env/bin/python",
+		"idf.port": "/dev/ttyUSB0"
+	}
+}

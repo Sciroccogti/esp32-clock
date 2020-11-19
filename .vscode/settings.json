@@ -1,0 +1,6 @@
+{
+    "cmake.configureEnvironment": {
+        "IDF_PATH": "/home/zyf/src/esp-idf"
+    },
+    "cmake.configureOnOpen": false
+}
