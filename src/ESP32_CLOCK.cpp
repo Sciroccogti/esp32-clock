@@ -96,7 +96,8 @@ void setup() {
 }
 
 void loop() {
-    int count = 0;  // 每小时获取一次天气
+    static int count = 0;  // 每小时获取一次天气
+    static const char *now_weather;
 
     if ((WiFi.status() == WL_CONNECTED)) {
         mydisp();
@@ -116,13 +117,13 @@ void loop() {
         if (count == 0 && getWeatherInfo(now_doc) == 0) {
             std::string weather =
                 now_doc["lives"][0]["weather"].as<std::string>();
-            const char* now_weather = WEATHER[weather].c_str();
+            now_weather = WEATHER[weather].c_str();
 
-            Paint_SelectImage(RYImage);
-            Paint_DrawString_EN(0, 32, now_weather, &Font16, WHITE, BLACK);
             printf("%s\n", now_weather);
             count = 12;
         }
+        Paint_SelectImage(RYImage);
+        Paint_DrawString_EN(0, 32, now_weather, &Font16, WHITE, BLACK);
         EPD_4IN2BC_Display(BlackImage, RYImage);
     }
     count--;
