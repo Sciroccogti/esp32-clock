@@ -2,6 +2,8 @@
 
 A e-paper clock driven by esp32, displaying time, weather, OHM data and even dida365 calendar.
 
+Currently only displays time...
+
 ## Environment
 
 - [PlatformIO IDE](https://github.com/platformio/platformio-vscode-ide)
