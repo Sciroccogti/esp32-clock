@@ -24,6 +24,7 @@ int getWeatherInfo(DynamicJsonDocument &now_doc) {
             String amap_payload = ip_http.getString();
             deserializeJson(ip_doc, amap_payload);
             adcode = ip_doc["adcode"].as<String>();
+            printf("adcode: %s\n", adcode.c_str());
             isInited = true;
         } else {
             adcode = "320211";

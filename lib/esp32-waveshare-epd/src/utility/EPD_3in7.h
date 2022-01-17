@@ -1,12 +1,13 @@
 /*****************************************************************************
-* | File      	:   ImageData.h
+* | File      	:   EPD_3IN7.h
 * | Author      :   Waveshare team
-* | Function    :	
+* | Function    :   3.7inch e-paper
+* | Info        :
 *----------------
 * |	This version:   V1.0
-* | Date        :   2018-10-23
+* | Date        :   2020-08-10
 * | Info        :
-*
+* -----------------------------------------------------------------------------
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documnetation files (the "Software"), to deal
@@ -26,13 +27,25 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
 #
-
 ******************************************************************************/
+#ifndef __EPD_3IN7_H_
+#define __EPD_3IN7_H_
 
-#ifndef _IMAGEDATA_H_
-#define _IMAGEDATA_H_
+#include "DEV_Config.h"
 
-extern const unsigned char gImage_3in7[];
+// Display resolution
+#define EPD_3IN7_WIDTH       280
+#define EPD_3IN7_HEIGHT      480 
+
+void EPD_3IN7_4Gray_Clear(void);
+void EPD_3IN7_4Gray_Init(void);
+void EPD_3IN7_4Gray_Display(const UBYTE *Image);
+
+void EPD_3IN7_1Gray_Clear(void);
+void EPD_3IN7_1Gray_Init(void);
+void EPD_3IN7_1Gray_Display(const UBYTE *Image);
+void EPD_3IN7_1Gray_Display_Part(const UBYTE *Image, UWORD Xstart, UWORD Ystart, UWORD Xend, UWORD Yend);
+
+void EPD_3IN7_Sleep(void);
 
 #endif
-/* FILE END */
