@@ -916,11 +916,52 @@ void Paint_DrawImage(const unsigned char* image_buffer, UWORD xStart,
     UWORD w_byte = (W_Image % 8) ? (W_Image / 8) + 1 : W_Image / 8;
     UDOUBLE Addr = 0;
     UDOUBLE pAddr = 0;
-    for (y = 0; y < H_Image; y++) {
-        for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
-            Addr = x + y * w_byte;
-            pAddr = x + (xStart / 8) + ((y + yStart) * Paint.WidthByte);
-            Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
-        }
+    switch (Paint.Rotate) {
+        case 0:
+            for (y = 0; y < H_Image; y++) {
+                for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
+                    Addr = x + y * w_byte;  // 一个字符代表 x 方向 8 个像素点
+                    pAddr = x + (xStart / 8) + ((y + yStart) * Paint.WidthByte);
+                    Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
+                }
+            }
+            break;
+        case 90:
+            for (y = 0; y < H_Image; y++) {
+                for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
+                    Addr = x + y * w_byte;
+                    pAddr = x + (xStart / 8) + ((y + yStart) * Paint.WidthByte);
+                    Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
+                }
+            }
+            break;
+        case 180:
+            for (y = 0; y < H_Image; y++) {
+                for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
+                    Addr = x + y * w_byte;
+                    pAddr = x + (xStart / 8) + ((y + yStart) * Paint.WidthByte);
+                    Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
+                }
+            }
+            break;
+        case 270:
+            for (y = 0; y < H_Image; y++) {
+                for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
+                    Addr = x + y * w_byte;
+                    for (int i = 0; i < 8; i++) {
+                        int X = yStart + y;
+                        int Y = Paint.HeightMemory - (x * 8 + i) - xStart - 1;
+                        pAddr = X / 8 + Y * Paint.WidthByte;
+                        if ((image_buffer[Addr] << i) & 0x80) {
+                            Paint.Image[pAddr] = Paint.Image[pAddr] | (0x80 >> (X % 8));
+                        } else {
+                            Paint.Image[pAddr] = Paint.Image[pAddr] & ~(0x80 >> (X % 8));
+                        }
+                    }
+                }
+            }
+            break;
+        default:
+            return;
     }
 }
