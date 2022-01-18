@@ -19,15 +19,13 @@ const int daylightOffset_sec = 0;
 
 const char* wday[7] = { "一", "二", "三", "四", "五", "六", "日" };
 
-std::map<std::string, std::string> WEATHER = {
-    { "小雨", "WXYU.BMP" }, { "中雨", "WZYU.BMP" }, { "大雨", "WDYU.BMP" },
-    { "暴雨", "WWET.BMP" }, { "晴", "WQING.BMP" }, { "多云", "WDYZQ.BMP" },
-    { "阴", "WYIN.BMP" }, { "雷阵雨", "WLZYU.BMP" }, { "阵雨", "WYGTQ.BMP" },
-    { "霾", "WFOG.BMP" }, { "雾", "WWU.BMP" }, { "雪", "WXUE.BMP" },
-    { "雨夹雪", "WYJX.BMP" }, { "冰雹", "WBBAO.BMP" }, { "月亮", "WMOON.BMP" },
-    { "深夜", "WSLEEP.BMP" }, { "日落", "SUMSET.BMP" },
-    { "日出", "SUNRISE.BMP" }, { "雨", "WZYU.BMP" }
-};
+std::map<std::string, unsigned char*> WEATHER = { { "小雨", img_WXYU },
+    { "中雨", img_WZYU }, { "大雨", img_WDYU }, { "暴雨", img_WWET },
+    { "晴", img_WQING }, { "多云", img_WDYZQ }, { "阴", img_WYIN },
+    { "雷阵雨", img_WLZYU }, { "阵雨", img_WYGTQ }, { "霾", img_WFOG },
+    { "雾", img_WWU }, { "雪", img_WXUE }, { "雨夹雪", img_WYJX },
+    { "冰雹", img_WBBAO }, { "月亮", img_WMOON }, { "深夜", img_SLEEP },
+    { "日落", img_SUNSET }, { "日出", img_SUNRISE }, { "雨", img_WZYU } };
 
 // Create a new image cache named IMAGE_BW and fill it with white
 UBYTE* BlackImage;
@@ -80,17 +78,20 @@ void gpio_init(void)
 
     timer_config_t config = {
         alarm_en : TIMER_ALARM_EN, //到达计数值启动报警(计数值溢出,进入中断)
-        counter_en : TIMER_PAUSE, //调用timer_init函数以后不启动计数,调用timer_start时才开始计数
+        counter_en :
+            TIMER_PAUSE, //调用timer_init函数以后不启动计数,调用timer_start时才开始计数
         intr_type : TIMER_INTR_LEVEL, /*!< Interrupt mode */
         counter_dir : TIMER_COUNT_UP, //计数方式是向上计数
         auto_reload : true, //自动重新装载预装值
-        divider : 80, //分频系数[2-65535]，频率为 80 MHz，故设为 80 时每 1us 计数一次
+        divider :
+            80, //分频系数[2-65535]，频率为 80 MHz，故设为 80 时每 1us 计数一次
     };
     timer_init(TIMER_GROUP_0, TIMER_0, &config);
     timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0); // 初始计数值
     timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1000000); // 计数到 100000
     timer_enable_intr(TIMER_GROUP_0, TIMER_0);
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer00_isr, (void*)TIMER_0, ESP_INTR_FLAG_IRAM, NULL);
+    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer00_isr, (void*)TIMER_0,
+        ESP_INTR_FLAG_IRAM, NULL);
     timer_start(TIMER_GROUP_0, TIMER_0);
 }
 
@@ -105,7 +106,9 @@ void setup()
     EPD_3IN7_4Gray_Clear();
     DEV_Delay_ms(500);
 
-    UWORD Imagesize = ((EPD_3IN7_WIDTH % 4 == 0) ? (EPD_3IN7_WIDTH / 4) : (EPD_3IN7_WIDTH / 4 + 1)) * EPD_3IN7_HEIGHT;
+    UWORD Imagesize = ((EPD_3IN7_WIDTH % 4 == 0) ? (EPD_3IN7_WIDTH / 4)
+                                                 : (EPD_3IN7_WIDTH / 4 + 1))
+        * EPD_3IN7_HEIGHT;
     if ((BlackImage = (UBYTE*)malloc(Imagesize)) == NULL) {
         ESP_LOGI("Failed to apply for black memory...\r\n");
         while (1)
@@ -120,14 +123,11 @@ void setup()
 
     DEV_Delay_ms(300);
 
-    EPD_3IN7_1Gray_Init(); //init 1 Gray mode
+    EPD_3IN7_1Gray_Init(); // init 1 Gray mode
     EPD_3IN7_1Gray_Clear();
     Paint_SelectImage(BlackImage);
     Paint_SetScale(2);
     Paint_Clear(WHITE);
-
-    Paint_DrawImage(gImage_wdyu, 10, 200, 80, 80);
-    EPD_3IN7_1Gray_Display(BlackImage);
 
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
@@ -136,7 +136,7 @@ void setup()
 
 void loop()
 {
-    static const char* now_weather;
+    static const unsigned char* now_weather;
     static char tmpStr[11]; // YYYY:mm:dd
     struct tm remoteTm;
     static bool isTimeOK = false;
@@ -161,24 +161,67 @@ void loop()
         sprintf(tmpStr, "%02d-%02d", pLocalTm->tm_mon + 1, pLocalTm->tm_mday);
         Paint_ClearWindows(0, 100, 187, 141, WHITE);
         Paint_DrawString_EN(0, 100, tmpStr, &Font24, WHITE, BLACK);
-        Paint_DrawString_CN(102, 100, wday[pLocalTm->tm_wday], &Font24CN, BLACK, WHITE);
-        Paint_DrawImage(gImage_wdyu, 10, 200, 80, 80);
+        Paint_DrawString_CN(
+            102, 100, wday[pLocalTm->tm_wday], &Font24CN, BLACK, WHITE);
         curDay = pLocalTm->tm_mday;
     }
 
     if ((WiFi.status() == WL_CONNECTED)) {
         // update weather every hour
         DynamicJsonDocument now_doc(512);
-        if ((pLocalTm->tm_min == 0 || now_weather == NULL) && getWeatherInfo(now_doc) == 0) {
-            std::string weather = now_doc["lives"][0]["weather"].as<std::string>();
-            now_weather = WEATHER[weather].c_str();
+        if ((pLocalTm->tm_min == 0 || now_weather == NULL)
+            && getWeatherInfo(now_doc, false) == 0 && isTimeOK) {
+            std::string weather
+                = now_doc["lives"][0]["weather"].as<std::string>();
+            now_weather = WEATHER[weather];
 
-            ESP_LOGI("weather: %s\n", now_weather);
-            Paint_DrawString_EN(0, 32, now_weather, &Font16, WHITE, BLACK);
+            printf("weather: %s\n", weather.c_str());
+            Paint_ClearWindows(0, 200, 200, 280, WHITE);
+            Paint_DrawImage(now_weather, 0, 200, 80, 80);
+
+            if (getWeatherInfo(now_doc, true) == 0) {
+                std::string cast1, cast2, name1, name2;
+                if (abs(pLocalTm->tm_hour - 12) < 6) { // 白天
+                    cast1 = now_doc["forecasts"][0]["casts"][0]["nightweather"]
+                                .as<std::string>();
+                    name1 = "今晚";
+                    cast2 = now_doc["forecasts"][0]["casts"][1]["dayweather"]
+                                .as<std::string>();
+                    name2 = "明天";
+                } else if (pLocalTm->tm_hour <= 6) {
+                    cast1 = now_doc["forecasts"][0]["casts"][0]["dayweather"]
+                                .as<std::string>();
+                    name1 = "今早";
+                    cast2 = now_doc["forecasts"][0]["casts"][0]["nightweather"]
+                                .as<std::string>();
+                    name2 = "今晚";
+                } else { // 晚上
+                    cast1 = now_doc["forecasts"][0]["casts"][1]["dayweather"]
+                                .as<std::string>();
+                    name1 = "明天";
+                    cast2 = now_doc["forecasts"][0]["casts"][2]["dayweather"]
+                                .as<std::string>();
+                    name2 = "后天";
+                }
+
+                printf("weather: %s\n", cast1.c_str());
+                Paint_DrawString_CN(
+                    86, 259, name1.c_str(), &Font16CN, BLACK, WHITE);
+                Paint_DrawString_CN(
+                    146, 259, name2.c_str(), &Font16CN, BLACK, WHITE);
+                Paint_DrawImage_Scale(
+                    WEATHER[cast1.c_str()], 80, 200, 80, 80, 6);
+                Paint_DrawImage_Scale(
+                    WEATHER[cast2.c_str()], 140, 200, 80, 80, 6);
+            }
         }
 
         // fetch time every hour
-        if (!isTimeOK || pLocalTm->tm_min == 0) {
+        if (!isTimeOK || (pLocalTm->tm_min == 0 && pLocalTm->tm_sec <= 2)) {
+            // clear every 6 hour
+            if (pLocalTm->tm_hour % 6 == 0) {
+                EPD_3IN7_1Gray_Clear();
+            }
             isTimeOK = false;
             if (!getLocalTime(&remoteTm)) {
                 ESP_LOGI("WARN: Unable to fetch time!\n");
@@ -205,7 +248,8 @@ void IRAM_ATTR timer00_isr(void* para)
     if ((intr_status & BIT(timer_idx)) && timer_idx == TIMER_0) {
         TIMERG0.int_clr_timers.t0 = 1; //清除中断标志
     }
-    TIMERG0.hw_timer[timer_idx].config.alarm_en = TIMER_ALARM_EN; //再次使能alarm
+    TIMERG0.hw_timer[timer_idx].config.alarm_en
+        = TIMER_ALARM_EN; //再次使能alarm
     t++;
     static int level = 0;
     gpio_set_level(GPIO_NUM_2, level);

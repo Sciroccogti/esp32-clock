@@ -3,7 +3,7 @@
  * @author Sciroccogti (scirocco_gti@yeah.net)
  * @brief 
  * @date 2022-01-18 13:32:40
- * @modified: 2022-01-18 14:41:01
+ * @modified: 2022-01-19 00:03:00
  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
@@ -54,6 +54,7 @@ extern myFONT FourFun72;
 void Paint_DrawString_MY(UWORD Xstart, UWORD Ystart, const char* pString,
                          myFONT* font, UWORD Color_Foreground,
                          UWORD Color_Background);
-
+void Paint_DrawImage_Scale(const unsigned char* image_buffer, UWORD xStart,
+    UWORD yStart, UWORD W_Image, UWORD H_Image, const int scale);
 #endif /* __MYFONT_H */
  

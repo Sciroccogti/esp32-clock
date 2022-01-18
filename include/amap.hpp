@@ -8,15 +8,16 @@
  * @brief Get the Weather Info object
  *
  * @param now_doc
+ * @param useFore: True to use forecast, False to use base
  * @return int : 0 if ok, -1 if error
  */
-int getWeatherInfo(DynamicJsonDocument &now_doc) {
+int getWeatherInfo(DynamicJsonDocument& now_doc, bool useFore)
+{
     static bool isInited = false;
     static String adcode;
     if (!isInited) {
-        const char *urlip =
-            "https://restapi.amap.com/v3/"
-            "ip?key=2f84cf79e4e4e7b7b055fdb65bdb7d2c";
+        const char* urlip = "https://restapi.amap.com/v3/"
+                            "ip?key=2f84cf79e4e4e7b7b055fdb65bdb7d2c";
         DynamicJsonDocument ip_doc(512);
         HTTPClient ip_http;
         ip_http.begin(urlip);
@@ -32,12 +33,21 @@ int getWeatherInfo(DynamicJsonDocument &now_doc) {
     }
 
     char urlnow[256];
-    sprintf(urlnow,
+    if (useFore) {
+        sprintf(urlnow,
+            "https://restapi.amap.com/v3/weather/"
+            "weatherInfo?city=%s&key=2f84cf79e4e4e7b7b055fdb65bdb7d2c&"
+            "extensions="
+            "all",
+            adcode.c_str());
+    } else {
+        sprintf(urlnow,
             "https://restapi.amap.com/v3/weather/"
             "weatherInfo?city=%s&key=2f84cf79e4e4e7b7b055fdb65bdb7d2c&"
             "extensions="
             "base",
             adcode.c_str());
+    }
 
     HTTPClient now_http;
     now_http.begin(urlnow);

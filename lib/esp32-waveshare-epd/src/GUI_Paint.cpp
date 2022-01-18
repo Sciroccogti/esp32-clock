@@ -930,8 +930,16 @@ void Paint_DrawImage(const unsigned char* image_buffer, UWORD xStart,
             for (y = 0; y < H_Image; y++) {
                 for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
                     Addr = x + y * w_byte;
-                    pAddr = x + (xStart / 8) + ((y + yStart) * Paint.WidthByte);
-                    Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
+                    for (int i = 0; i < 8; i++) {
+                        int X = Paint.WidthMemory - y - yStart - 1;
+                        int Y = x * 8 + i + xStart;
+                        pAddr = X / 8 + Y * Paint.WidthByte;
+                        if ((image_buffer[Addr] << i) & 0x80) {
+                            Paint.Image[pAddr] = Paint.Image[pAddr] | (0x80 >> (X % 8));
+                        } else {
+                            Paint.Image[pAddr] = Paint.Image[pAddr] & ~(0x80 >> (X % 8));
+                        }
+                    }
                 }
             }
             break;
@@ -939,8 +947,16 @@ void Paint_DrawImage(const unsigned char* image_buffer, UWORD xStart,
             for (y = 0; y < H_Image; y++) {
                 for (x = 0; x < w_byte; x++) {  // 8 pixel =  1 byte
                     Addr = x + y * w_byte;
-                    pAddr = x + (xStart / 8) + ((y + yStart) * Paint.WidthByte);
-                    Paint.Image[pAddr] = (unsigned char)image_buffer[Addr];
+                    for (int i = 0; i < 8; i++) {
+                        int X = Paint.HeightMemory - (x * 8 + i) - xStart - 1;
+                        int Y = Paint.WidthMemory - y - yStart - 1;
+                        pAddr = X / 8 + Y * Paint.WidthByte;
+                        if ((image_buffer[Addr] << i) & 0x80) {
+                            Paint.Image[pAddr] = Paint.Image[pAddr] | (0x80 >> (X % 8));
+                        } else {
+                            Paint.Image[pAddr] = Paint.Image[pAddr] & ~(0x80 >> (X % 8));
+                        }
+                    }
                 }
             }
             break;
