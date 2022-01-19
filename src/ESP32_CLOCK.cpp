@@ -9,7 +9,9 @@
 #include "wifiConnect.h"
 #include <ctime>
 #include <esp_log.h>
+#include <lwip/apps/sntp.h>
 #include <map>
+#include <stdlib.h>
 
 DynamicJsonDocument doc_time(512);
 
@@ -73,26 +75,25 @@ void gpio_init(void)
     // 根据设定参数初始化并使能
     // gpio_config(&gpio_config_structure);
 
-    // 输出高电平，点亮LED
-    gpio_set_level(GPIO_NUM_2, 1);
-
-    timer_config_t config = {
-        alarm_en : TIMER_ALARM_EN, //到达计数值启动报警(计数值溢出,进入中断)
-        counter_en :
-            TIMER_PAUSE, //调用timer_init函数以后不启动计数,调用timer_start时才开始计数
-        intr_type : TIMER_INTR_LEVEL, /*!< Interrupt mode */
-        counter_dir : TIMER_COUNT_UP, //计数方式是向上计数
-        auto_reload : true, //自动重新装载预装值
-        divider :
-            80, //分频系数[2-65535]，频率为 80 MHz，故设为 80 时每 1us 计数一次
-    };
-    timer_init(TIMER_GROUP_0, TIMER_0, &config);
-    timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0); // 初始计数值
-    timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1000000); // 计数到 100000
-    timer_enable_intr(TIMER_GROUP_0, TIMER_0);
-    timer_isr_register(TIMER_GROUP_0, TIMER_0, timer00_isr, (void*)TIMER_0,
-        ESP_INTR_FLAG_IRAM, NULL);
-    timer_start(TIMER_GROUP_0, TIMER_0);
+    // timer_config_t config = {
+    //     alarm_en : TIMER_ALARM_EN, //到达计数值启动报警(计数值溢出,进入中断)
+    //     counter_en :
+    //         TIMER_PAUSE,
+    //         //调用timer_init函数以后不启动计数,调用timer_start时才开始计数
+    //     intr_type : TIMER_INTR_LEVEL, /*!< Interrupt mode */
+    //     counter_dir : TIMER_COUNT_UP, //计数方式是向上计数
+    //     auto_reload : true, //自动重新装载预装值
+    //     divider :
+    //         80, //分频系数[2-65535]，频率为 80 MHz，故设为 80 时每 1us
+    //         计数一次
+    // };
+    // timer_init(TIMER_GROUP_0, TIMER_0, &config);
+    // timer_set_counter_value(TIMER_GROUP_0, TIMER_0, 0); // 初始计数值
+    // timer_set_alarm_value(TIMER_GROUP_0, TIMER_0, 1000000); // 计数到 100000
+    // timer_enable_intr(TIMER_GROUP_0, TIMER_0);
+    // timer_isr_register(TIMER_GROUP_0, TIMER_0, timer00_isr, (void*)TIMER_0,
+    //     ESP_INTR_FLAG_IRAM, NULL);
+    // timer_start(TIMER_GROUP_0, TIMER_0);
 }
 
 void setup()
@@ -129,21 +130,32 @@ void setup()
     Paint_SetScale(2);
     Paint_Clear(WHITE);
 
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    // configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
     gpio_init();
+
+    // sntp， 后台自动更新时间
+    ESP_LOGI("sntp", "Initializing SNTP");
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "ntp1.aliyun.com");
+    sntp_setservername(1, "210.72.145.44"); // 国家授时中心服务器 IP 地址
+    sntp_setservername(2, "1.cn.pool.ntp.org");
+    sntp_init();
+    setenv("TZ", "CST-8", 1);
+    tzset();
 }
 
 void loop()
 {
     static const unsigned char* now_weather;
     static char tmpStr[11]; // YYYY:mm:dd
-    struct tm remoteTm;
     static bool isTimeOK = false;
     static int curDay = 0;
     static bool tweak = false;
 
     tm* pLocalTm = localtime(&t);
+    time(&t);
+    localtime_r(&t, pLocalTm);
     printf("%ld %02d:%02d\n", t, pLocalTm->tm_min, pLocalTm->tm_sec);
 
     // twinkle every sec
@@ -204,32 +216,41 @@ void loop()
                     name2 = "后天";
                 }
 
-                printf("weather: %s\n", cast1.c_str());
+                printf("cast1: %s\n", cast1.c_str());
+                printf("cast2: %s\n", cast2.c_str());
                 Paint_DrawString_CN(
                     86, 259, name1.c_str(), &Font16CN, BLACK, WHITE);
                 Paint_DrawString_CN(
                     146, 259, name2.c_str(), &Font16CN, BLACK, WHITE);
-                Paint_DrawImage_Scale(
-                    WEATHER[cast1.c_str()], 80, 200, 80, 80, 6);
-                Paint_DrawImage_Scale(
-                    WEATHER[cast2.c_str()], 140, 200, 80, 80, 6);
+                if (cast1 != "null") {
+                    Paint_DrawImage_Scale(
+                        WEATHER[cast1.c_str()], 80, 200, 80, 80, 6);
+                }
+                if (cast2 != "null") {
+                    Paint_DrawImage_Scale(
+                        WEATHER[cast2.c_str()], 140, 200, 80, 80, 6);
+                }
             }
         }
 
         // fetch time every hour
         if (!isTimeOK || (pLocalTm->tm_min == 0 && pLocalTm->tm_sec <= 2)) {
+            sntp_init();
+            isTimeOK = false;
+            while (pLocalTm->tm_year < (2019 - 1900)) {
+                ESP_LOGD(
+                    TAG, "Waiting for system time to be set... (%d)", ++retry);
+                vTaskDelay(100 / portTICK_PERIOD_MS);
+                time(&t);
+                localtime_r(&t, pLocalTm);
+            }
+            sntp_stop();
+            isTimeOK = true;
+
             // clear every 6 hour
             if (pLocalTm->tm_hour % 6 == 0) {
                 EPD_3IN7_1Gray_Clear();
-            }
-            isTimeOK = false;
-            if (!getLocalTime(&remoteTm)) {
-                ESP_LOGI("WARN: Unable to fetch time!\n");
-                isTimeOK = false;
-            } else {
-                pLocalTm = &remoteTm;
-                t = mktime(pLocalTm);
-                isTimeOK = true;
+                delay(300);
             }
         }
     }
