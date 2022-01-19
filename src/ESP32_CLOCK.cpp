@@ -165,16 +165,16 @@ void loop()
         sprintf(tmpStr, "%02d %02d", pLocalTm->tm_hour, pLocalTm->tm_min);
     }
     tweak = !tweak;
-    Paint_ClearWindows(187, 100, 395, 177, WHITE);
-    Paint_DrawString_MY(187, 100, tmpStr, &FourFun72, BLACK, WHITE);
+    Paint_ClearWindows(0, 74, 320, 200, WHITE);
+    Paint_DrawString_MY(0, 74, tmpStr, &FourFun118, BLACK, WHITE);
 
     // update Day
     if (pLocalTm->tm_mday != curDay) {
         sprintf(tmpStr, "%02d-%02d", pLocalTm->tm_mon + 1, pLocalTm->tm_mday);
-        Paint_ClearWindows(0, 100, 187, 141, WHITE);
-        Paint_DrawString_EN(0, 100, tmpStr, &Font24, WHITE, BLACK);
+        Paint_ClearWindows(320, 100, 454, 141, WHITE);
+        Paint_DrawString_EN(320, 100, tmpStr, &Font24, WHITE, BLACK);
         Paint_DrawString_CN(
-            102, 100, wday[pLocalTm->tm_wday], &Font24CN, BLACK, WHITE);
+            405, 100, wday[pLocalTm->tm_wday], &Font24CN, BLACK, WHITE);
         curDay = pLocalTm->tm_mday;
     }
 

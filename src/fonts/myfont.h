@@ -11,9 +11,9 @@
 #define __MYFONT_H
 
 
-/* Max size of bitmap will based on a font72 (48x77) */
-#define MAX_HEIGHT_MYFONT         77
-#define MAX_WIDTH_MYFONT          48
+/* Max size of bitmap will based on a font118 (72x126) */
+#define MAX_HEIGHT_MYFONT         126
+#define MAX_WIDTH_MYFONT          72
 #define OFFSET_MYBITMAP           54
 
 #ifdef __cplusplus
@@ -45,6 +45,7 @@ typedef struct
 // extern sFONT Font8;
 
 extern myFONT FourFun72;
+extern myFONT FourFun118;
 // extern const unsigned char Font16_Table[];
 
 #ifdef __cplusplus
