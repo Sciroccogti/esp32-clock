@@ -174,7 +174,7 @@ void loop()
         Paint_ClearWindows(320, 100, 454, 141, WHITE);
         Paint_DrawString_EN(320, 100, tmpStr, &Font24, WHITE, BLACK);
         Paint_DrawString_CN(
-            405, 100, wday[pLocalTm->tm_wday], &Font24CN, BLACK, WHITE);
+            405, 100, wday[pLocalTm->tm_wday - 1], &Font24CN, BLACK, WHITE);
         curDay = pLocalTm->tm_mday;
     }
 
@@ -218,15 +218,15 @@ void loop()
 
                 printf("cast1: %s\n", cast1.c_str());
                 printf("cast2: %s\n", cast2.c_str());
-                Paint_DrawString_CN(
-                    86, 259, name1.c_str(), &Font16CN, BLACK, WHITE);
-                Paint_DrawString_CN(
-                    146, 259, name2.c_str(), &Font16CN, BLACK, WHITE);
                 if (cast1 != "null") {
+                    Paint_DrawString_CN(
+                        86, 259, name1.c_str(), &Font16CN, BLACK, WHITE);
                     Paint_DrawImage_Scale(
                         WEATHER[cast1.c_str()], 80, 200, 80, 80, 6);
                 }
                 if (cast2 != "null") {
+                    Paint_DrawString_CN(
+                        146, 259, name2.c_str(), &Font16CN, BLACK, WHITE);
                     Paint_DrawImage_Scale(
                         WEATHER[cast2.c_str()], 140, 200, 80, 80, 6);
                 }
